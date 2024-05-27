@@ -68,10 +68,10 @@ const BrainfuckInterpreter = struct {
                     self.ptr = self.ptr - 1;
                 },
                 .inc_data => {
-                    self.ptr[0] += 1;
+                    self.ptr[0] = @addWithOverflow(self.ptr[0], 1)[0];
                 },
                 .dec_data => {
-                    self.ptr[0] -= 1;
+                    self.ptr[0] = @subWithOverflow(self.ptr[0], 1)[0];
                 },
                 .putc => {
                     _ = cstdio.putchar(self.ptr[0]);
@@ -186,10 +186,10 @@ pub fn compile_brainfuck_block(comptime brainfuck: []const BrainFuckInstr) type 
                         ptr = ptr - 1;
                     },
                     .inc_data => {
-                        ptr[0] += 1;
+                        ptr[0] = @addWithOverflow(ptr[0], 1)[0];
                     },
                     .dec_data => {
-                        ptr[0] -= 1;
+                        ptr[0] = @subWithOverflow(ptr[0], 1)[0];
                     },
                     .putc => {
                         _ = cstdio.putchar(ptr[0]);

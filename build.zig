@@ -23,32 +23,49 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
-
     lib.linkLibC();
-
-    // This declares intent for the library to be installed into the standard
-    // location when the user invokes the "install" step (the default step when
-    // running `zig build`).
     b.installArtifact(lib);
 
-    const exe = b.addExecutable(.{
-        .name = "brainfuck",
-        .root_source_file = b.path("src/main.zig"),
+    const interpreter = b.addExecutable(.{
+        .name = "brainfuck_interpreter",
+        .root_source_file = b.path("src/interpreter.zig"),
         .target = target,
         .optimize = optimize,
     });
+    interpreter.linkLibC();
+    b.installArtifact(interpreter);
 
-    exe.linkLibC();
+    const hello = b.addExecutable(.{
+        .name = "hello",
+        .root_source_file = b.path("src/hello.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    hello.linkLibC();
+    b.installArtifact(hello);
 
-    // This declares intent for the executable to be installed into the
-    // standard location when the user invokes the "install" step (the default
-    // step when running `zig build`).
-    b.installArtifact(exe);
+    const mandel = b.addExecutable(.{
+        .name = "mandel",
+        .root_source_file = b.path("src/mandel.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    mandel.linkLibC();
+    b.installArtifact(mandel);
+
+    const hanoi = b.addExecutable(.{
+        .name = "hanoi",
+        .root_source_file = b.path("src/hanoi.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    hanoi.linkLibC();
+    b.installArtifact(hanoi);
 
     // This *creates* a Run step in the build graph, to be executed when another
     // step is evaluated that depends on it. The next line below will establish
     // such a dependency.
-    const run_cmd = b.addRunArtifact(exe);
+    const run_cmd = b.addRunArtifact(mandel);
 
     // By making the run step depend on the install step, it will be run from the
     // installation directory rather than directly from within the cache directory.
@@ -78,18 +95,9 @@ pub fn build(b: *std.Build) void {
 
     const run_lib_unit_tests = b.addRunArtifact(lib_unit_tests);
 
-    const exe_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-
-    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
-
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_lib_unit_tests.step);
-    test_step.dependOn(&run_exe_unit_tests.step);
 }
