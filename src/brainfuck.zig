@@ -102,6 +102,114 @@ pub fn interpret_brainfuck(brainfuck_code: []const u8) !void {
     interpreter.interpret_brainfuck_block(brainfuck);
 }
 
+pub fn interpret_parsed_brainfuck(brainfuck: []const BrainFuckInstr) !void {
+    var buffer = [_]u8{0} ** 30000;
+    var interpreter = BrainfuckInterpreter.init(&buffer);
+
+    interpreter.interpret_brainfuck_block(brainfuck);
+}
+
+fn comptime_parse_brainfuck_block(comptime brainfuck_code: []const u8, offset: *usize, level: usize) ![]const BrainFuckInstr {
+    comptime var brainfuck: []const BrainFuckInstr = &.{};
+
+    while (offset.* < brainfuck_code.len) {
+        const char = brainfuck_code[offset.*];
+        offset.* += 1;
+        switch (char) {
+            '>' => {
+                brainfuck = append(.inc_ptr, brainfuck);
+            },
+            '<' => {
+                brainfuck = append(.dec_ptr, brainfuck);
+            },
+            '+' => {
+                brainfuck = append(.inc_data, brainfuck);
+            },
+            '-' => {
+                brainfuck = append(.dec_data, brainfuck);
+            },
+            '.' => {
+                brainfuck = append(.putc, brainfuck);
+            },
+            ',' => {
+                brainfuck = append(.getc, brainfuck);
+            },
+            '[' => {
+                brainfuck = append(.{ .block = try comptime_parse_brainfuck_block(brainfuck_code, offset, level + 1) }, brainfuck);
+            },
+            ']' => {
+                if (level > 0) {
+                    return brainfuck;
+                } else {
+                    return error.MismatchedParens;
+                }
+            },
+            else => {},
+        }
+    }
+
+    if (level == 0) {
+        return brainfuck;
+    } else {
+        return error.MismatchedParens;
+    }
+}
+
+fn append(comptime instr: BrainFuckInstr, comptime list: []const BrainFuckInstr) []const BrainFuckInstr {
+    return list ++ @as([]const BrainFuckInstr, &.{instr});
+}
+
+pub fn comptime_parse_brainfuck(comptime brainfuck_code: []const u8) ![]const BrainFuckInstr {
+    var offset: usize = 0;
+    return comptime_parse_brainfuck_block(brainfuck_code, &offset, 0);
+}
+
+pub fn compile_brainfuck(comptime brainfuck_code: []const u8) type {
+    @setEvalBranchQuota(1000000);
+    const brainfuck = try comptime_parse_brainfuck(brainfuck_code);
+    return compile_brainfuck_block(brainfuck);
+}
+
+pub fn compile_brainfuck_block(comptime brainfuck: []const BrainFuckInstr) type {
+    @setEvalBranchQuota(1000000);
+    return struct {
+        ptr: [*]u8,
+
+        pub fn execute(in_ptr: [*]u8) [*]u8 {
+            var ptr = in_ptr;
+            inline for (brainfuck) |instr| {
+                switch (instr) {
+                    .inc_ptr => {
+                        ptr = ptr + 1;
+                    },
+                    .dec_ptr => {
+                        ptr = ptr - 1;
+                    },
+                    .inc_data => {
+                        ptr[0] += 1;
+                    },
+                    .dec_data => {
+                        ptr[0] -= 1;
+                    },
+                    .putc => {
+                        _ = cstdio.putchar(ptr[0]);
+                    },
+                    .getc => {
+                        ptr[0] = @intCast(cstdio.getchar());
+                    },
+                    .block => |bf| {
+                        const block = compile_brainfuck_block(bf);
+                        while (ptr[0] != 0) {
+                            ptr = block.execute(ptr);
+                        }
+                    },
+                }
+            }
+            return ptr;
+        }
+    };
+}
+
 test "parsing test" {
     var arena = std.heap.ArenaAllocator.init(testing.allocator);
     defer arena.deinit();

@@ -2,5 +2,7 @@ const std = @import("std");
 const bf = @import("brainfuck.zig");
 
 pub fn main() !void {
-    try bf.interpret_brainfuck(@embedFile("../test/hanoi.b"));
+    var buffer = [_]u8{0} ** 30000;
+    const bf_runner = bf.compile_brainfuck(@embedFile("test/mandel.b"));
+    _ = bf_runner.execute(&buffer);
 }
