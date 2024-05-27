@@ -1,4 +1,4 @@
-# Zig constexpr Brainfuck compiler
+# Zig comptime Brainfuck compiler
 
 This is mostly a proof-of-concept for taking a piece of Brainfuck code and using Zig comptime to convert it into a native code.
 
