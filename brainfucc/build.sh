@@ -2,11 +2,11 @@
 
 gcc ./brainfucc.c -o brainfucc
 
-./brainfucc <../test/hello.b >hello.c
+./brainfucc <../src/test/hello.b >hello.c
 gcc ./hello.c -O3 -o hello
 
-./brainfucc <../test/hanoi.b >hanoi.c
+./brainfucc <../src/test/hanoi.b >hanoi.c
 gcc ./hanoi.c -O3 -o hanoi
 
-./brainfucc <../test/mandel.b >mandel.c
+./brainfucc <../src/test/mandel.b >mandel.c
 gcc ./mandel.c -O3 -o mandel
