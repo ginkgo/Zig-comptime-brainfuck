@@ -2,6 +2,16 @@
 
 This is mostly a proof-of-concept for taking a piece of Brainfuck code and using Zig comptime to convert it into a native code.
 
+This works by loading a brainfuck program and passing it to a compiler function that generates a runner that can be called with pointer to the initialized byte table.
+```
+const bf = @import("brainfuck.zig");
+
+pub fn main() !void {
+    var buffer = [_]u8{0} ** 30000;
+    const bf_runner = bf.compile_brainfuck(@embedFile("test/hanoi.b"));
+    _ = bf_runner.execute(&buffer);
+}```
+
 For comparison, and also as a first step to this I've also implemented a basic runtime parser and interpreter.
 
 ## Building
@@ -61,6 +71,7 @@ sys	0m0.013s
 ```
 
 One thing the brainfucc compiled binaries have over the Zig ones is that they're a lot smaller. (15-64KB vs ~1MB)
+Compilation take quite some time. I also had to crank up the `@setEvalBranchQuota()` value quite a bit (not that I exactly know what it is).
 
 ## Copyright
 
