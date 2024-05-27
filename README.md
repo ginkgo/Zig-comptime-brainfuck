@@ -19,7 +19,7 @@ For comparison, and also as a first step to this I've also implemented a basic r
 
 ## Building
 
-I recommend for performance:
+I recommend building for performance:
 ```
 $ zig build -Doptimize=ReleaseFast
 ```
